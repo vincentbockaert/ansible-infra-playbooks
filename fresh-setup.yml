@@ -1,0 +1,26 @@
+---
+- name: Update servers
+  hosts: hcloud
+  remote_user: root
+
+  tasks:
+  - name: Update all packages to their latest version
+    ansible.builtin.apt:
+      name: "*"
+      state: latest
+      update_cache: true
+  
+  - name: Install commonly required packages
+    ansible.builtin.apt:
+      name:
+        - docker.io
+        - git
+        - fail2ban
+        - cron-apt
+      state: latest
+  
+  - name: Enable docker daemon
+    ansible.builtin.systemd_service:
+      name: docker.service
+      state: started
+      enabled: true

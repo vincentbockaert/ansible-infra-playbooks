@@ -1,2 +1,3 @@
 plugin: hetzner.hcloud.hcloud
 connect_with: public_ipv6
+group: all

@@ -1,7 +1,7 @@
 ---
 - name: Update servers
   hosts: all
-  remote_user: root
+  remote_user: poweruser
 
   tasks:
   - name: Update all packages to their latest version
@@ -13,14 +13,34 @@
   - name: Install commonly required packages
     ansible.builtin.apt:
       name:
-        - docker.io
         - git
         - fail2ban
-        - cron-apt
+        - unattended-upgrades
       state: latest
+
+  - name: Enable automatic Debian updates
+    # https://wiki.debian.org/UnattendedUpgrades
+    ansible.builtin.lineinfile:
+      path: /etc/apt/apt.conf.d/20auto-upgrades
+      line: |
+        APT::Periodic::Update-Package-Lists "1";
+        APT::Periodic::Download-Upgradeable-Packages "1";
+        APT::Periodic::AutocleanInterval "7";
+        APT::Periodic::Unattended-Upgrade "1";
+      create: yes
+      state: present
+
+  - name: Configure reboot if needed after automatic Debian updates
+    # https://wiki.debian.org/UnattendedUpgrades
+    ansible.builtin.lineinfile:
+      path: /etc/apt/apt.conf.d/50unattended-upgrades
+      line: |
+        Unattended-Upgrade::Automatic-Reboot "true";
+        Unattended-Upgrade::Automatic-Reboot-WithUsers "true";
+        Unattended-Upgrade::Automatic-Reboot-Time "02:00";
+      create: yes
+      state: present    
   
-  - name: Enable docker daemon
-    ansible.builtin.systemd_service:
-      name: docker.service
-      state: started
-      enabled: true
+  - name: Set timezone to Europe/Brussels
+    community.general.timezone:
+      name: Europe/Brussels
